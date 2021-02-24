@@ -350,8 +350,7 @@ Test the route using `insomnia`:
 [GET] http://localhost:3001/products
 ```
 
-Now I would like to see a specific product.
-Let's say you type http://localhost:3000/products/5e385d110909f66c6404fbc9 then our API should respond with the product where id equals 2. Express let's us do this via the `req.params` object:
+Now I would like to see a specific product. Express let's us do this via the `req.params` object:
 
 ```js
 app.get('/products/:id', async (req, res) => {
@@ -377,7 +376,7 @@ app.get('/products/:id', async (req, res) => {
 })
 ```
 
-Open http://localhost:3000/products/5e385d110909f66c6404fbc9 in your browser.
+Test http://localhost:3000/products/:product_id in insomnia.
 
 ## Exercise
 
