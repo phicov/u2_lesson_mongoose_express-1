@@ -296,7 +296,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const logger = require('morgan')
 const PORT = process.env.PORT || 3000
-const db = require('./db/index')
+const db = require('./db')
 
 const app = express()
 
