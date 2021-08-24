@@ -381,8 +381,8 @@ Test http://localhost:3000/products/:product_id in insomnia.
 
 Create the following Express routes for Brands:
 
-- http://localhost:3000/brands
-- http://localhost:3000/brands/:brand_id
+- http://localhost:3001/brands
+- http://localhost:3001/brands/:brand_id
 
 **Success!**
 
