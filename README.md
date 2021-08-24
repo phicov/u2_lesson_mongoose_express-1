@@ -60,7 +60,8 @@ Awesome! Now that we have our data model design 100% let's jump into coding this
 Let's start!
 
 ```sh
-npm init -y && npm install mongoose
+npm init -y
+npm install mongoose
 mkdir db models seed
 touch db/index.js models/{brand,product,index}.js seed/brandsProducts.js
 ```
