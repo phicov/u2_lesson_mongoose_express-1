@@ -375,7 +375,7 @@ app.get('/products/:id', async (req, res) => {
 })
 ```
 
-Test http://localhost:3000/products/:product_id in insomnia.
+Test http://localhost:3001/products/:product_id in insomnia.
 
 ## Exercise
 
