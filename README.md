@@ -1,5 +1,7 @@
 # Mongoose and Express
 
+![MongooseExpress](https://i.imgur.com/nDoaxGh.png)
+
 ## Getting started
 
 1. Fork
