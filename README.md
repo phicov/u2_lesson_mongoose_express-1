@@ -82,11 +82,7 @@ mongodb-mongoose-express-api/db/index.js
 const mongoose = require('mongoose')
 
 mongoose
-  .connect('mongodb://127.0.0.1:27017/productsDatabase', {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    useFindAndModify: true
-  })
+  .connect('mongodb://127.0.0.1:27017/productsDatabase')
   .then(() => {
     console.log('Successfully connected to MongoDB.')
   })
@@ -260,10 +256,10 @@ Let's execute our seed file:
 node seed/brandsProducts.js
 ```
 
-So how do we know if it worked? We could drop into the `mongo` interactive shell and check:
+So how do we know if it worked? We could drop into the `mongosh` interactive shell and check:
 
 ```sh
-mongo
+mongosh
 > use productsDatabase
 > db.products.find()
 ```
@@ -278,7 +274,7 @@ Create a .gitignore file `touch .gitignore`!
 Cool, enough Mongoose. Now, Express. Let's install Express:
 
 ```sh
-npm install express body-parser cors morgan
+npm install express cors morgan
 npm install nodemon --dev
 ```
 
@@ -295,7 +291,6 @@ Add the code:
 ```js
 const express = require('express')
 const cors = require('cors')
-const bodyParser = require('body-parser')
 const logger = require('morgan')
 const PORT = process.env.PORT || 3001
 const db = require('./db')
@@ -303,7 +298,7 @@ const db = require('./db')
 const app = express()
 
 app.use(cors())
-app.use(bodyParser.json())
+app.use(express.json())
 app.use(logger('dev'))
 
 app.get('/', (req, res) => {
