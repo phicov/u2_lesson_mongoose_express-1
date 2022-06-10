@@ -11,19 +11,24 @@
 
 ## Database Design
 
-We are going to build an express api for products.
-The constraints are that a product has a title, a description, a price, brand name and a brand url.
+We are going to build an Express API for `products`.
+A `product` will consist of the following attributes:
+- `title`
+- `description`
+- `price` 
+- `brandName`
+- `brandUrl`.
 
 How should we design our data model? Perhaps this way:
 
 ```js
-const Product = new Schema(
+const productSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: String, required: true },
-    brand_name: { type: String, required: true },
-    brand_url: { type: String, required: true }
+    brandName: { type: String, required: true },
+    brandUrl: { type: String, required: true }
   },
   { timestamps: true }
 )
@@ -31,22 +36,10 @@ const Product = new Schema(
 
 > Note: There is a more efficient way of modeling our data than the above. Let's explore that.
 
-With the above design, if create products what we will notice quickly is that the brand name and brand url fields will repeat themselves, for example if we have 300 New Balance shoes in our database, we will repeat "New Balance" and "https://www.newbalance.com" 300 times! We can solve this by creating a brand model and have the product model refer to the brand model like this:
+With the above design, as we create more products the opportunity for needless duplication is increased. For example, if we have 300 instances of "New Balance" shoes in our database, there will also be 300 instances of the values "New Balance" and "https://www.newbalance.com"! We can solve this by creating a separate `Brand` model and have the `Product` model reference it like so:
 
 ```js
-const Product = new Schema(
-  {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    price: { type: String, required: true },
-    brand: { type: Schema.Types.ObjectId, ref: 'brands' }
-  },
-  { timestamps: true }
-)
-```
-
-```js
-const Brand = new Schema(
+const brandSchema = new Schema(
   {
     name: { type: String, required: true },
     url: { type: String, required: true }
@@ -55,12 +48,23 @@ const Brand = new Schema(
 )
 ```
 
-Now we create a brand only once (not 300 times) and have the product model reference it via the brand id. This is a more elegant approach.
+```js
+const productSchema = new Schema(
+  {
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    price: { type: String, required: true },
+    brand: { type: Schema.Types.ObjectId, ref: 'Brand' } // this line references the newly created 'Brand' model.
+  },
+  { timestamps: true }
+)
+```
 
-Awesome! Now that we have our data model design 100% let's jump into coding this app!
+By creating an instance of a `Brand` and simply referencing that instance in the `Product`, we help to reduce excessive data duplication and minize the opportunity for creating bugs (ex: a misspelling of "Nw Balaance" in several instances of a `Product` would be problematic if one were to search for all instances of "New Balance".)
 
-Let's start!
+Let's build our server and connect it to our _local_ Mongo database.
 
+In the terminal:
 ```sh
 npm init -y
 npm install mongoose
@@ -68,13 +72,12 @@ mkdir db models seed
 touch db/index.js models/{brand,product,index}.js seed/brandsProducts.js
 ```
 
-Now let's open up Visual Studio Code and write some code:
-
+Open the project with VSCode:
 ```sh
 code .
 ```
 
-Inside our `db` folder we are going to use Mongoose to establish a connection to our MongoDB `productsDatabase`:
+Inside our `db` folder we will configure Mongoose to establish a connection to our local MongoDB `productsDatabase`:
 
 mongodb-mongoose-express-api/db/index.js
 
@@ -82,7 +85,7 @@ mongodb-mongoose-express-api/db/index.js
 const mongoose = require('mongoose')
 
 mongoose
-  .connect('mongodb://127.0.0.1:27017/productsDatabase')
+  .connect('mongodb://127.0.0.1:27017/productsDatabase') // if we don't have a local database named "productsDatabase" one will be created upon a successful connection
   .then(() => {
     console.log('Successfully connected to MongoDB.')
   })
@@ -95,14 +98,14 @@ const db = mongoose.connection
 module.exports = db
 ```
 
-Let's create our brand schema:
+Let's create our `Brand` schema:
 
 mongodb-mongoose-express-api/models/brand.js
 
 ```js
 const { Schema } = require('mongoose')
 
-const Brand = new Schema(
+const brandSchema = new Schema(
   {
     name: { type: String, required: true },
     url: { type: String, required: true }
@@ -110,46 +113,48 @@ const Brand = new Schema(
   { timestamps: true }
 )
 
-module.exports = Brand
+module.exports = brandSchema
 ```
 
-Now we can create our product schema:
+Let's also create our `Product` schema:
 
 mongodb-mongoose-express-api/models/product.js
 
 ```js
 const { Schema } = require('mongoose')
 
-const Product = new Schema(
+const productSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: String, required: true },
-    brand: { type: Schema.Types.ObjectId, ref: 'brands' }
+    brand: { type: Schema.Types.ObjectId, ref: 'Brand' }
   },
   { timestamps: true }
 )
 
-module.exports = Product
+module.exports = productSchema
 ```
 
-Next we'll set up our models:
+Next, we'll set up our models:
 
 `models/index.js`
 
 ```js
 const mongoose = require('mongoose')
-const ProductSchema = require('./Product')
-const BrandSchema = require('./Brand')
+const productSchema = require('./Product')
+const brandSchema = require('./Brand')
 
-const Product = mongoose.model('products', ProductSchema)
-const Brand = mongoose.model('brands', BrandSchema)
+const Product = mongoose.model('Products', productSchema)
+const Brand = mongoose.model('Brands', brandSchema)
 
 module.exports = {
   Product,
   Brand
 }
 ```
+
+With our schemas now defined we can create a "seed" file that, when run, will quickly populate our local database with instances of the `Brand` model and the `Product` model.
 
 `seed/brandsProducts.js`
 
@@ -248,34 +253,32 @@ const run = async () => {
 run()
 ```
 
-Awesome, so this products "seed" file above is a script that, once executed, connects to the Mongo database and creates 7 products in the products collection.
-
-Let's execute our seed file:
-
+Let's execute our seed file in the terminal:
 ```sh
 node seed/brandsProducts.js
 ```
 
-So how do we know if it worked? We could drop into the `mongosh` interactive shell and check:
+To verify that the seed file created our data we can run `mongosh` interactive shell and check:
 
 ```sh
 mongosh
 > use productsDatabase
-> db.products.find()
+> db.products.find({})
 ```
 
-Create a .gitignore file `touch .gitignore`!
+Once we have verified our data was created, create a `.gitignore` in the root of this directory and add the following:
 
 ```sh
 /node_modules
 .DS_Store
 ```
+Adding `node_modules` to our `.gitignore` file (before making a git commit) ensures that we will not track those files.
 
-Cool, enough Mongoose. Now, Express. Let's install Express:
+From here we can install the dependencies we want to build an Express server incorporating Mongoose:
 
 ```sh
 npm install express cors morgan
-npm install nodemon --dev
+npm install nodemon --include=dev
 ```
 
 And now let's create our Express boilerplate:
@@ -314,29 +317,28 @@ Let's make sure our server works, add the following scripts to your `package.jso
 
 ```sh
 "scripts": {
-    "start":"node server.js",
-    "dev":"nodemon server.js"
+  "start":"node server.js",
+  "dev":"nodemon server.js"
 }
 ```
 
 Run:
-
 ```sh
 npm run dev
 ```
 
 Awesome! Next we want to be able to access our Product model from within the models folder.
-Add the following to the top of your server.js file:
+Add the following above your routes in your server.js file:
 
 ```js
 const { Product } = require('./models')
 ```
 
 Let's create the route to show all products:
-
 ```js
+// server.js
 app.get('/products', async (req, res) => {
-  const products = await Product.find()
+  const products = await Product.find({})
   res.json(products)
 })
 ```
@@ -347,7 +349,8 @@ Test the route using `insomnia`:
 [GET] http://localhost:3001/products
 ```
 
-Now I would like to see a specific product. Express let's us do this via the `req.params` object:
+Let's create a route to show a specific product. 
+`req.params`, provided by Express, is helpful in this scenario:
 
 ```js
 app.get('/products/:id', async (req, res) => {
@@ -373,14 +376,14 @@ app.get('/products/:id', async (req, res) => {
 })
 ```
 
-Test http://localhost:3001/products/:product_id in insomnia.
+Test http://localhost:3001/products/:id in insomnia.
 
 ## Exercise
 
 Create the following Express routes for Brands:
 
 - http://localhost:3001/brands
-- http://localhost:3001/brands/:brand_id
+- http://localhost:3001/brands/:id
 
 **Success!**
 
