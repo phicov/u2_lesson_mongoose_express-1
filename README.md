@@ -278,7 +278,7 @@ From here we can install the dependencies we want to build an Express server inc
 
 ```sh
 npm install express cors morgan
-npm install nodemon --include=dev
+npm install nodemon --save-dev
 ```
 
 And now let's create our Express boilerplate:
